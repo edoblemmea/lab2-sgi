@@ -10,9 +10,15 @@ namespace Espectros
 {
     // Pide el permiso de escena, activa los managers de AR y avisa cuando hay datos.
     // Nada del juego debe arrancar antes de OnSceneReady.
+    // Los managers deben estar DESACTIVADOS en el inspector: este script los enciende.
     public class SceneReady : MonoBehaviour
     {
-        const string ScenePermission = "com.oculus.permission.USE_SCENE";
+        // Horizon OS reciente usa el permiso "horizonos"; los anteriores, el "com.oculus". Pedimos los dos.
+        static readonly string[] ScenePermissions =
+        {
+            "com.oculus.permission.USE_SCENE",
+            "horizonos.permission.USE_SCENE"
+        };
 
         [SerializeField] ARPlaneManager planeManager;
         [SerializeField] ARBoundingBoxManager boxManager;
@@ -23,6 +29,8 @@ namespace Espectros
         public static bool IsReady { get; private set; }
         public static event Action OnSceneReady;
 
+        bool managersEnabled;
+
         void Awake()
         {
             IsReady = false;
@@ -32,27 +40,41 @@ namespace Espectros
         void Start()
         {
 #if UNITY_EDITOR
-            // En el editor usamos la habitación falsa (TestRoom): lista al instante.
+            // En el editor usamos la habitaciÃ³n falsa (TestRoom): lista al instante.
             Fire();
 #elif UNITY_ANDROID
-            if (Permission.HasUserAuthorizedPermission(ScenePermission))
+            bool allGranted = true;
+            foreach (var p in ScenePermissions)
+            {
+                bool granted = Permission.HasUserAuthorizedPermission(p);
+                Debug.Log($"[Espectros] Permiso {p}: {(granted ? "concedido" : "no concedido")}");
+                allGranted &= granted;
+            }
+
+            if (allGranted)
             {
                 EnableManagers();
+                return;
             }
-            else
+
+            var callbacks = new PermissionCallbacks();
+            callbacks.PermissionGranted += p =>
             {
-                var callbacks = new PermissionCallbacks();
-                callbacks.PermissionGranted += _ => EnableManagers();
-                callbacks.PermissionDenied += _ =>
-                    Debug.LogError("[Espectros] Permiso de escena DENEGADO. Actívalo en Ajustes > Privacidad > Datos espaciales.");
-                Permission.RequestUserPermission(ScenePermission, callbacks);
-            }
+                Debug.Log("[Espectros] Concedido: " + p);
+                EnableManagers();
+            };
+            callbacks.PermissionDenied += p =>
+                Debug.LogError("[Espectros] DENEGADO: " + p + ". ActÃ­valo en Ajustes > Privacidad y seguridad > Datos espaciales.");
+            Permission.RequestUserPermissions(ScenePermissions, callbacks);
 #endif
         }
 
         void EnableManagers()
         {
-            Debug.Log("[Espectros] Permiso de escena concedido, activando managers");
+            if (managersEnabled) return; // los callbacks pueden llegar una vez por permiso
+            managersEnabled = true;
+
+            Debug.Log("[Espectros] Activando managers de escena");
             if (planeManager != null) planeManager.enabled = true;
             if (boxManager != null) boxManager.enabled = true;
             if (meshManager != null) meshManager.enabled = true;
@@ -64,19 +86,22 @@ namespace Espectros
             float t = 0f;
             while (t < timeout)
             {
-                int meshes = meshManager != null ? meshManager.meshes.Count : 0;
-                int planes = planeManager != null ? planeManager.trackables.count : 0;
-                if (meshes > 0 && planes > 0) break;
+                if (MeshCount() > 0 && PlaneCount() > 0) break;
                 t += Time.deltaTime;
                 yield return null;
             }
             // Margen para que lleguen el resto de trozos de mesh.
             yield return new WaitForSeconds(0.5f);
 
-            Debug.Log($"[Espectros] Meshes: {(meshManager != null ? meshManager.meshes.Count : 0)}, " +
-                      $"planos: {(planeManager != null ? planeManager.trackables.count : 0)}");
+            Debug.Log($"[Espectros] Meshes: {MeshCount()}, planos: {PlaneCount()}, " +
+                      $"cajas: {(boxManager != null ? boxManager.trackables.count : 0)}");
+            if (MeshCount() == 0)
+                Debug.LogWarning("[Espectros] No hay mesh: revisa Space Setup en esta habitaciÃ³n y la feature Meshing (Android).");
             Fire();
         }
+
+        int MeshCount() => meshManager != null && meshManager.meshes != null ? meshManager.meshes.Count : 0;
+        int PlaneCount() => planeManager != null ? planeManager.trackables.count : 0;
 
         void Fire()
         {
