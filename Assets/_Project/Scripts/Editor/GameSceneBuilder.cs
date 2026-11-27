@@ -66,7 +66,7 @@ namespace Espectros.EditorTools
             BuildRoom(assets);
             BuildSystems(assets, cam, true);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(TestRoomPath));
+            GameAssetsBuilder.EnsureFolder(Path.GetDirectoryName(TestRoomPath));
             EditorSceneManager.SaveScene(scene, TestRoomPath);
             Debug.Log("[Espectros] TestRoom creada. Dale a Play. Controles: WASD/QE mover, botón derecho mirar, F linterna, " +
                       "P charco donde miras, K eliminar fantasma, N nuevo fantasma, 1/2/3 menú, M abrir menú.");
@@ -320,7 +320,7 @@ namespace Espectros.EditorTools
 
         static void BuildRoom(GameAssetsBuilder.Assets a)
         {
-            Directory.CreateDirectory(TestRoomMeshes);
+            GameAssetsBuilder.EnsureFolder(TestRoomMeshes);
             var room = new GameObject("Room");
             var furnitureRoot = new GameObject("Furniture");
             const float W = 5f, D = 4f, H = 2.6f;

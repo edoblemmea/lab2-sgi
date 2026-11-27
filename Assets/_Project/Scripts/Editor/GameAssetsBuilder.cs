@@ -25,7 +25,7 @@ namespace Espectros.EditorTools
 
         public static Assets EnsureAll()
         {
-            foreach (var d in new[] { Materials, Ghosts, Prefabs, Rounds }) Directory.CreateDirectory(d);
+            foreach (var d in new[] { Materials, Ghosts, Prefabs, Rounds }) EnsureFolder(d);
 
             var a = new Assets
             {
@@ -69,7 +69,26 @@ namespace Espectros.EditorTools
             }
 
             AssetDatabase.SaveAssets();
+
+            int okRounds = a.rounds.FindAll(r => r != null && AssetDatabase.Contains(r)).Count;
+            string msg = $"[Espectros] Assets: tipo de fantasma {Ok(a.whiteGhost)}, prefab del fantasma {Ok(a.ghostPrefab)}, " +
+                         $"rondas {okRounds}/{a.rounds.Count}, materiales {Ok(a.liquid)}/{Ok(a.debugSpot)}/{Ok(a.screenFlash)}/{Ok(a.occluder)}";
+            if (okRounds < a.rounds.Count || !AssetDatabase.Contains(a.whiteGhost) || a.ghostPrefab == null) Debug.LogError(msg);
+            else Debug.Log(msg);
             return a;
+        }
+
+        static string Ok(Object o) => o != null && AssetDatabase.Contains(o) ? "OK" : "FALTA";
+
+        // Crea la carpeta (y las de encima) a través de Unity, para que el AssetDatabase la conozca
+        public static void EnsureFolder(string path)
+        {
+            path = path.Replace('\\', '/').TrimEnd('/');
+            if (AssetDatabase.IsValidFolder(path)) return;
+            int slash = path.LastIndexOf('/');
+            string parent = path.Substring(0, slash);
+            EnsureFolder(parent);
+            AssetDatabase.CreateFolder(parent, path.Substring(slash + 1));
         }
 
         // ---------- Prefab del fantasma ----------

@@ -28,6 +28,13 @@ namespace Espectros
 
         void Awake() => Instance = this;
 
+        void Start()
+        {
+            if (defaultPrefab == null || defaultType == null)
+                Debug.LogError($"[Espectros] GhostSpawner: falta {(defaultPrefab == null ? "el prefab" : "")} " +
+                               $"{(defaultType == null ? "el tipo de fantasma" : "")}. Vuelve a ejecutar el menú Espectros.");
+        }
+
         public void StartRound(RoundConfig cfg)
         {
             Clear();

@@ -38,6 +38,10 @@ namespace Espectros
             if (health == null) health = FindAnyObjectByType<PlayerHealth>();
             if (health != null) health.Died += OnPlayerDied;
 
+            int missing = rounds.RemoveAll(r => r == null);
+            if (missing > 0)
+                Debug.LogError($"[Espectros] GameManager: {missing} rondas vacías en la lista. Vuelve a ejecutar el menú Espectros.");
+
             // Sin rondas configuradas: una ronda por defecto con el tipo del spawner
             if (rounds.Count == 0 && spawner != null && spawner.DefaultType != null)
             {
@@ -93,6 +97,7 @@ namespace Espectros
             switch (State)
             {
                 case GameState.RoundIntro:
+                    if (CurrentRound == null || spawner == null) break;
                     if (stateTimer >= settings.roundIntroTime)
                     {
                         TimeLeft = CurrentRound.duration * settings.RoundTimeMultiplier;
