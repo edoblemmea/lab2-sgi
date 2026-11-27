@@ -52,8 +52,12 @@ namespace Espectros
                 var g = gh.collider.GetComponentInParent<GhostController>();
                 if (g != null && g.IsAlive)
                 {
-                    g.Reveal(s.paintRevealTime);
-                    Debug.Log($"[Espectros] Pintura: fantasma {g.Type.displayName} revelado");
+                    // La pintura se queda pegada en el fantasma (y no sigue volando)
+                    g.AddPaint(color, gh.point, s.paintOnGhostRadius, s.paintRevealTime);
+                    Debug.Log($"[Espectros] Pintura: fantasma {g.Type.displayName} manchado y revelado");
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayAt(SfxLibrary.GhostDie, gh.point, 0.4f, 1.8f);
+                    Finish();
+                    return;
                 }
             }
 

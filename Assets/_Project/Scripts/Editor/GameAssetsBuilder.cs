@@ -18,7 +18,7 @@ namespace Espectros.EditorTools
         public class Assets
         {
             public Material debugSpot, liquid, screenFlash, occluder, meshDebug, roomWall, roomFurniture;
-            public Material ghostTint, ghostSilhouette, sonarWave, ball, star, paint, lightBeam;
+            public Material ghostTint, ghostSilhouette, sonarWave, ball, star, paint, lightBeam, ghostPaint;
             public PhysicsMaterial ballPhysics;
             public GhostType whiteGhost, mischiefGhost, invisibleGhost;
             public GhostController ghostPrefab;
@@ -60,6 +60,7 @@ namespace Espectros.EditorTools
             a.ballPhysics = EnsurePhysicsMaterial();
             a.paint = EnsureMaterial("M_Paint", "Custom/UnlitColor", m => m.SetColor("_Color", Color.magenta));
             a.lightBeam = EnsureMaterial("M_LightBeam", "Custom/LightBeam", null);
+            a.ghostPaint = EnsureMaterial("M_GhostPaint", "Custom/GhostPaint", null);
 
             a.whiteGhost = EnsureAsset<GhostType>($"{Ghosts}/GT_White.asset", t =>
             {
@@ -102,7 +103,7 @@ namespace Espectros.EditorTools
             });
 
             a.ghostPrefab = EnsureGhostPrefab();
-            UpdateGhostPrefab(a.ghostPrefab, a.ghostTint);
+            UpdateGhostPrefab(a.ghostPrefab, a.ghostTint, a.ghostPaint);
             a.ballPrefab = EnsureBallPrefab(a.ball, a.ballPhysics);
             a.starPrefab = EnsureStarPrefab(a.star);
             a.paintPrefab = EnsurePaintPrefab(a.paint);
@@ -193,13 +194,19 @@ namespace Espectros.EditorTools
         }
 
         // Añade la capa de color del tipo al prefab del fantasma (si no la tiene)
-        static void UpdateGhostPrefab(GhostController prefab, Material tint)
+        static void UpdateGhostPrefab(GhostController prefab, Material tint, Material paint)
         {
-            if (prefab == null || tint == null) return;
+            if (prefab == null) return;
             var so = new SerializedObject(prefab);
-            var p = so.FindProperty("tintMaterial");
-            if (p == null || p.objectReferenceValue == tint) return;
-            p.objectReferenceValue = tint;
+            bool changed = false;
+            foreach (var (field, mat) in new[] { ("tintMaterial", tint), ("paintMaterial", paint) })
+            {
+                var p = so.FindProperty(field);
+                if (p == null || mat == null || p.objectReferenceValue == mat) continue;
+                p.objectReferenceValue = mat;
+                changed = true;
+            }
+            if (!changed) return;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(prefab);
         }

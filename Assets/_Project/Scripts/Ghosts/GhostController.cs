@@ -24,6 +24,8 @@ namespace Espectros
         [SerializeField] TMP_Text debugLabel;
         [Tooltip("Capa de color del tipo de fantasma (Custom/GhostOverlay)")]
         [SerializeField] Material tintMaterial;
+        [Tooltip("Manchas de pintura pegadas al fantasma (Custom/GhostPaint)")]
+        [SerializeField] Material paintMaterial;
 
         public GhostType Type { get; private set; }
         public GhostState State { get; private set; } = GhostState.Entering;
@@ -52,6 +54,18 @@ namespace Espectros
         float silhouetteUntil = -1f;
         bool silhouetteShown;
         AudioSource ambient;
+
+        // Manchas de pintura: posición relativa al fantasma, color y cuándo se pegó
+        const int MaxPaint = 4;
+        readonly Vector3[] paintLocal = new Vector3[MaxPaint];
+        readonly Color[] paintColor = new Color[MaxPaint];
+        readonly float[] paintRadius = new float[MaxPaint];
+        int paintCount, paintNext;
+        bool paintShown;
+        readonly Vector4[] paintPointsBuf = new Vector4[MaxPaint];
+        readonly Vector4[] paintColorsBuf = new Vector4[MaxPaint];
+        static readonly int PaintPointsId = Shader.PropertyToID("_PaintPoints");
+        static readonly int PaintColorsId = Shader.PropertyToID("_PaintColors");
         float lastLitTime = -10f;
 
         // Paralizado por la luz: no se mueve ni puede huir mientras lo iluminan y un rato después
@@ -293,6 +307,51 @@ namespace Espectros
 
         public void Reveal(float seconds) => revealedUntil = Mathf.Max(revealedUntil, Time.time + seconds);
 
+        // La pintura que le da se queda pegada como una mancha que se mueve con él (y lo revela)
+        public void AddPaint(Color color, Vector3 worldPoint, float radius, float revealSeconds)
+        {
+            if (!IsAlive) return;
+            Reveal(revealSeconds);
+            int i = paintNext;
+            paintNext = (paintNext + 1) % MaxPaint;
+            paintCount = Mathf.Min(MaxPaint, paintCount + 1);
+            paintLocal[i] = transform.InverseTransformPoint(worldPoint);
+            paintColor[i] = color;
+            paintRadius[i] = radius;
+            RefreshMaterials();
+        }
+
+        // Las manchas duran lo que dura el revelado y se desvanecen en el último segundo
+        void UpdatePaint()
+        {
+            if (paintCount == 0) return;
+            float left = revealedUntil - Time.time;
+            if (left <= 0f)
+            {
+                paintCount = 0;
+                RefreshMaterials();
+                return;
+            }
+            float fade = Mathf.Clamp01(left);
+            for (int k = 0; k < MaxPaint; k++)
+            {
+                if (k < paintCount)
+                {
+                    Vector3 w = transform.TransformPoint(paintLocal[k]);
+                    paintPointsBuf[k] = new Vector4(w.x, w.y, w.z, paintRadius[k]);
+                    var c = paintColor[k];
+                    paintColorsBuf[k] = new Vector4(c.r, c.g, c.b, fade);
+                }
+                else
+                {
+                    paintPointsBuf[k] = Vector4.zero;
+                    paintColorsBuf[k] = Vector4.zero;
+                }
+            }
+            mpb.SetVectorArray(PaintPointsId, paintPointsBuf);
+            mpb.SetVectorArray(PaintColorsId, paintColorsBuf);
+        }
+
         void Damage(float amount)
         {
             Health -= amount;
@@ -369,6 +428,7 @@ namespace Espectros
             bool visible = Type.weakness != GhostWeakness.PaintThenFlashlight || IsRevealed || settings.debugMode || silhouette;
             foreach (var r in renderers) if (r != null) r.enabled = visible;
 
+            UpdatePaint();
             if (flashTimer > 0f) flashTimer -= Time.deltaTime;
             ApplyColor(flashTimer > 0f || litThisFrame ? 0.6f : 0f);
 
@@ -435,6 +495,7 @@ namespace Espectros
         void RefreshMaterials()
         {
             silhouetteShown = Time.time < silhouetteUntil && silhouetteMaterial != null;
+            paintShown = paintCount > 0 && paintMaterial != null;
             for (int i = 0; i < renderers.Length; i++)
             {
                 var r = renderers[i];
@@ -442,6 +503,7 @@ namespace Espectros
                 var mats = new List<Material>(baseMaterials[i]);
                 if (tintMaterial != null) mats.Add(tintMaterial);
                 if (silhouetteShown) mats.Add(silhouetteMaterial);
+                if (paintShown) mats.Add(paintMaterial);
                 r.sharedMaterials = mats.ToArray();
             }
         }

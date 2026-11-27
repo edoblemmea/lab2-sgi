@@ -137,6 +137,8 @@ namespace Espectros
         public float paintRevealTime = 6f;
         [Tooltip("Distancia del impacto a la que la pintura revela a un fantasma (m)")]
         public float paintRevealRadius = 0.5f;
+        [Tooltip("Tamaño de la mancha que se queda pegada al fantasma (m)")]
+        public float paintOnGhostRadius = 0.09f;
 
         [Header("Puntos")]
         public int killScore = 100;
