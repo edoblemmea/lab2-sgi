@@ -15,10 +15,13 @@ MonoBehaviour:
   ghosts:
   - type: {fileID: 11400000, guid: cd7eedcd630edba498f050c0be87acb4, type: 2}
     count: 5
+    spawnAfterOthers: 0
   - type: {fileID: 11400000, guid: 7ab53874862e22a47b55c2174d0fd5fb, type: 2}
     count: 3
+    spawnAfterOthers: 0
   - type: {fileID: 11400000, guid: 8764b1d0a1202e54b95d5f53a88fde8c, type: 2}
     count: 2
+    spawnAfterOthers: 1
   duration: 110
   spawnInterval: 4
   maxAlive: 3

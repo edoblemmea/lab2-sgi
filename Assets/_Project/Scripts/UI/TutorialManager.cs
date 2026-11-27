@@ -77,12 +77,12 @@ namespace Espectros
             {
                 Done = true;
                 current = -1;
-                Show("¡Preparada! Elimina a todos los fantasmas", 3f);
+                Show("<size=70%><color=#b2392f>INSTRUCCIONES COMPLETADAS</color></size>\nElimina a todos los fantasmas", 3f);
                 Debug.Log("[Espectros] Tutorial terminado");
                 onFinished?.Invoke();
                 return;
             }
-            Show($"<size=60%>Tutorial {current + 1}/{steps.Count}</size>\n{steps[current].text}", float.MaxValue);
+            Show($"<size=70%><color=#b2392f>INSTRUCCIÓN {current + 1}/{steps.Count}</color></size>\n{steps[current].text}", float.MaxValue);
         }
 
         void Update()

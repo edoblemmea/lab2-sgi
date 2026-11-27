@@ -206,6 +206,10 @@ namespace Espectros.EditorTools
             var tutorialText = BuildHud(cam);
             Set(tutorial, "tutorialText", tutorialText);
             BuildWristMenu();
+
+            // Estilo de texto elegido (propuesta F); se reaplica porque BuildWristMenu rehace el panel
+            if (AssetDatabase.LoadAssetAtPath<Font>("Assets/_Project/Fonts/SpecialElite-Regular.ttf") != null)
+                UiStyleSetup.ApplyExpediente();
         }
 
         static void BuildFlashlight(Camera cam)
