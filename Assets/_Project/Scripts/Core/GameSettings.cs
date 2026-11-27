@@ -43,15 +43,15 @@ namespace Espectros
         [Tooltip("Distancia a la cabeza a la que el fantasma asusta (m)")]
         public float scareDistance = 0.45f;
         [Tooltip("Tiempo escondido antes de asomarse (s, mínimo y máximo)")]
-        public Vector2 hiddenTime = new Vector2(2f, 5f);
+        public Vector2 hiddenTime = new Vector2(1.5f, 3.5f);
         [Tooltip("Tiempo que pasa asomado (s)")]
-        public float peekDuration = 2.5f;
+        public float peekDuration = 4f;
         [Tooltip("Tiempo que lo tienes que mirar para que huya (s)")]
-        public float seenToFlee = 0.8f;
+        public float seenToFlee = 2f;
         [Tooltip("Multiplicador de velocidad al acercarse")]
         public float approachSpeedFactor = 0.6f;
         [Tooltip("Multiplicador de velocidad al huir")]
-        public float fleeSpeedFactor = 1.8f;
+        public float fleeSpeedFactor = 1.2f;
         [Tooltip("Multiplicador de velocidad en modo furia")]
         public float enragedSpeedFactor = 1.5f;
         [Tooltip("Distancia mínima a la cabeza del escondite al que huye (m)")]
@@ -71,11 +71,13 @@ namespace Espectros
         [Header("Linterna")]
         public float flashlightRange = 4f;
         [Tooltip("Ángulo total del cono (grados)")]
-        public float flashlightAngle = 40f;
+        public float flashlightAngle = 50f;
         [Tooltip("Daño por segundo de luz (un fantasma blanco tiene 1,5 de vida)")]
-        public float flashlightDamagePerSecond = 2f;
+        public float flashlightDamagePerSecond = 4f;
         [Tooltip("Tiempo que el fantasma sigue paralizado (y sin poder huir) después de dejar de iluminarlo (s)")]
-        public float lightStunTime = 0.6f;
+        public float lightStunTime = 1f;
+        [Tooltip("La linterna sigue encendida este tiempo después de perder el gesto (por si el reconocimiento parpadea) (s)")]
+        public float flashlightOffDelay = 0.3f;
         [Tooltip("Batería máxima (segundos de luz)")]
         public float flashlightBattery = 40f;
         public float flashlightIntensity = 3f;
@@ -117,7 +119,7 @@ namespace Espectros
 
         // Versión de los valores guardados en la escena. Si se cambian los valores por defecto en el código,
         // se sube CurrentVersion y se añade el cambio en Migrate(): así las escenas ya creadas se actualizan solas.
-        const int CurrentVersion = 2;
+        const int CurrentVersion = 3;
         // Empieza en 0: las escenas guardadas antes de existir este campo lo cargan como 0 y se migran.
         [SerializeField, HideInInspector] int settingsVersion = 0;
 
@@ -137,6 +139,18 @@ namespace Espectros
                 peekDuration = 2.5f;
                 fleeSpeedFactor = 1.8f;
             }
+            if (settingsVersion < 3)
+            {
+                // Más fácil todavía: muere en menos de medio segundo de luz y tarda mucho más en asustarse
+                flashlightAngle = 50f;
+                flashlightDamagePerSecond = 4f;
+                lightStunTime = 1f;
+                flashlightOffDelay = 0.3f;
+                seenToFlee = 2f;
+                peekDuration = 4f;
+                fleeSpeedFactor = 1.2f;
+                hiddenTime = new Vector2(1.5f, 3.5f);
+            }
             settingsVersion = CurrentVersion;
             Debug.Log("[Espectros] GameSettings actualizado a la versión " + CurrentVersion);
         }
@@ -146,6 +160,8 @@ namespace Espectros
             if (instance != null && instance != this) { Destroy(this); return; }
             instance = this;
             Migrate();
+            Debug.Log($"[Espectros] Ajustes v{settingsVersion}: linterna {flashlightAngle}° daño {flashlightDamagePerSecond}/s " +
+                      $"parálisis {lightStunTime}s, huye tras {seenToFlee}s mirándolo, asomado {peekDuration}s, huida x{fleeSpeedFactor}");
         }
 
         public void SetDifficulty(Difficulty d) { difficulty = d; NotifyChanged(); }

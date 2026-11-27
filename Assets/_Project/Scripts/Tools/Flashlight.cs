@@ -25,6 +25,7 @@ namespace Espectros
         public event Action<bool> Toggled;
 
         GameSettings settings;
+        float lastWantTime = -10f;
 
         void Start()
         {
@@ -54,6 +55,9 @@ namespace Espectros
 #else
             bool keyOn = false;
 #endif
+            // Si el reconocimiento del gesto parpadea, no apagarla al instante
+            if (wantOn) lastWantTime = Time.time;
+            else if (handTracked && Time.time - lastWantTime < settings.flashlightOffDelay) wantOn = true;
             if (wantOn && Battery <= 0f) wantOn = false;
             if (wantOn != IsOn) SetOn(wantOn);
 
