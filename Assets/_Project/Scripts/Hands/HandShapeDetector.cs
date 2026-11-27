@@ -18,8 +18,8 @@ namespace Espectros
         [SerializeField] float minimumHoldTime = 0.1f;
         [SerializeField] float detectionInterval = 0.05f;
 
-        public UnityEvent gesturePerformed;
-        public UnityEvent gestureEnded;
+        public UnityEvent gesturePerformed = new UnityEvent();
+        public UnityEvent gestureEnded = new UnityEvent();
 
         public bool IsPerformed => performed;
 
