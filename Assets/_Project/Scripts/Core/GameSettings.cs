@@ -45,13 +45,13 @@ namespace Espectros
         [Tooltip("Tiempo escondido antes de asomarse (s, mínimo y máximo)")]
         public Vector2 hiddenTime = new Vector2(2f, 5f);
         [Tooltip("Tiempo que pasa asomado (s)")]
-        public float peekDuration = 1.5f;
+        public float peekDuration = 2.5f;
         [Tooltip("Tiempo que lo tienes que mirar para que huya (s)")]
-        public float seenToFlee = 0.4f;
+        public float seenToFlee = 0.8f;
         [Tooltip("Multiplicador de velocidad al acercarse")]
         public float approachSpeedFactor = 0.6f;
         [Tooltip("Multiplicador de velocidad al huir")]
-        public float fleeSpeedFactor = 2.5f;
+        public float fleeSpeedFactor = 1.8f;
         [Tooltip("Multiplicador de velocidad en modo furia")]
         public float enragedSpeedFactor = 1.5f;
         [Tooltip("Distancia mínima a la cabeza del escondite al que huye (m)")]
@@ -71,9 +71,11 @@ namespace Espectros
         [Header("Linterna")]
         public float flashlightRange = 4f;
         [Tooltip("Ángulo total del cono (grados)")]
-        public float flashlightAngle = 30f;
+        public float flashlightAngle = 40f;
         [Tooltip("Daño por segundo de luz (un fantasma blanco tiene 1,5 de vida)")]
-        public float flashlightDamagePerSecond = 1f;
+        public float flashlightDamagePerSecond = 2f;
+        [Tooltip("Tiempo que el fantasma sigue paralizado (y sin poder huir) después de dejar de iluminarlo (s)")]
+        public float lightStunTime = 0.6f;
         [Tooltip("Batería máxima (segundos de luz)")]
         public float flashlightBattery = 40f;
         public float flashlightIntensity = 3f;

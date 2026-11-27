@@ -45,6 +45,10 @@ namespace Espectros
         float speedMultiplier = 1f;
         float stateTime, hiddenDuration, seenTimer, stunTimer, flashTimer, revealedUntil = -1f;
         bool litThisFrame;
+        float lastLitTime = -10f;
+
+        // Paralizado por la luz: no se mueve ni puede huir mientras lo iluminan y un rato después
+        bool StunnedByLight => Time.time - lastLitTime < settings.lightStunTime;
         Vector3 visualBasePos;
         float bobPhase;
 
@@ -162,13 +166,14 @@ namespace Espectros
         // Vuela en línea recta hacia el destino. Devuelve true al llegar.
         bool MoveTo(Vector3 target, float speed)
         {
-            if (stunTimer > 0f) return false; // la luz lo deja paralizado
+            if (stunTimer > 0f || StunnedByLight) return false; // la luz lo deja paralizado
             transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
             return (transform.position - target).sqrMagnitude < 0.0025f;
         }
 
         float CountSeen(bool seen)
         {
+            if (StunnedByLight) return 0f; // iluminado no puede escapar
             seenTimer = seen ? seenTimer + Time.deltaTime : Mathf.Max(0f, seenTimer - Time.deltaTime);
             return seenTimer;
         }
@@ -250,8 +255,8 @@ namespace Espectros
                 return;
             }
 
-            if (stunTimer <= 0f) PlayAnim("surprised");
-            stunTimer = 0.15f;
+            if (!StunnedByLight) PlayAnim("surprised");
+            lastLitTime = Time.time;
             flashTimer = 0.1f;
             Damage(amount);
         }
