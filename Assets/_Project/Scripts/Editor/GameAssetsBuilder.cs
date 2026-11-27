@@ -185,6 +185,14 @@ namespace Espectros.EditorTools
         {
             var a = AssetDatabase.LoadAssetAtPath<T>(path);
             if (a != null) return a;
+            if (File.Exists(path))
+            {
+                // Existe pero no se carga como T (por ejemplo, con el script perdido): se rehace
+                var main = AssetDatabase.LoadMainAssetAtPath(path);
+                Debug.LogWarning($"[Espectros] {path} no se puede cargar como {typeof(T).Name} " +
+                                 $"(se ha cargado como {(main != null ? main.GetType().Name : "nada")}). Se vuelve a crear.");
+                AssetDatabase.DeleteAsset(path);
+            }
             a = ScriptableObject.CreateInstance<T>();
             init(a);
             AssetDatabase.CreateAsset(a, path);

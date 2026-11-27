@@ -32,7 +32,57 @@ namespace Espectros.EditorTools
             var assets = GameAssetsBuilder.EnsureAll();
             BuildSystems(assets, origin.Camera != null ? origin.Camera : Camera.main, false);
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            VerifyReferences();
             Debug.Log("[Espectros] Juego configurado. Guarda la escena (Ctrl+S) y haz Build And Run.");
+        }
+
+        // Vuelve a asignar los assets (rondas, fantasma, materiales) a los sistemas de la escena abierta,
+        // sin rehacer la habitación ni el resto de objetos
+        [MenuItem("Espectros/Reparar referencias del juego en la escena abierta")]
+        public static void RepairReferences()
+        {
+            var origin = Object.FindAnyObjectByType<XROrigin>();
+            Camera cam = origin != null && origin.Camera != null ? origin.Camera : Camera.main;
+            if (cam == null)
+            {
+                EditorUtility.DisplayDialog("Espectros", "No encuentro la cámara principal en la escena abierta.", "Vale");
+                return;
+            }
+            var assets = GameAssetsBuilder.EnsureAll();
+            BuildSystems(assets, cam, origin == null);
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            if (VerifyReferences()) Debug.Log("[Espectros] Referencias reparadas. Guarda la escena (Ctrl+S).");
+        }
+
+        // Comprueba que los sistemas tienen asignados sus assets y lo escribe en la consola
+        static bool VerifyReferences()
+        {
+            var problems = new List<string>();
+            var gm = Object.FindAnyObjectByType<GameManager>();
+            if (gm == null) problems.Add("no hay GameManager");
+            else
+            {
+                var list = new SerializedObject(gm).FindProperty("rounds");
+                int empty = 0;
+                for (int i = 0; i < list.arraySize; i++)
+                    if (list.GetArrayElementAtIndex(i).objectReferenceValue == null) empty++;
+                if (list.arraySize == 0 || empty > 0) problems.Add($"rondas vacías: {empty}/{list.arraySize}");
+            }
+            var spawner = Object.FindAnyObjectByType<GhostSpawner>();
+            if (spawner == null) problems.Add("no hay GhostSpawner");
+            else
+            {
+                var so = new SerializedObject(spawner);
+                if (so.FindProperty("defaultPrefab").objectReferenceValue == null) problems.Add("falta el prefab del fantasma");
+                if (so.FindProperty("defaultType").objectReferenceValue == null) problems.Add("falta el tipo de fantasma");
+            }
+            if (problems.Count == 0)
+            {
+                Debug.Log("[Espectros] Referencias de la escena: OK");
+                return true;
+            }
+            Debug.LogError("[Espectros] Referencias de la escena con problemas: " + string.Join(", ", problems));
+            return false;
         }
 
         [MenuItem("Espectros/Crear escena TestRoom")]
@@ -43,8 +93,10 @@ namespace Espectros.EditorTools
                 !EditorUtility.DisplayDialog("Espectros", "Ya existe TestRoom. ¿Volver a crearla?", "Volver a crear", "Cancelar"))
                 return;
 
-            var assets = GameAssetsBuilder.EnsureAll();
+            // Primero la escena nueva: al abrirla Unity descarga de memoria los assets que no usa nadie,
+            // así que los assets se cargan DESPUÉS para que las referencias no queden vacías
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var assets = GameAssetsBuilder.EnsureAll();
 
             // Luz y cámara (la "cabeza")
             var lightGo = new GameObject("Directional Light");
@@ -68,6 +120,7 @@ namespace Espectros.EditorTools
 
             GameAssetsBuilder.EnsureFolder(Path.GetDirectoryName(TestRoomPath));
             EditorSceneManager.SaveScene(scene, TestRoomPath);
+            VerifyReferences();
             Debug.Log("[Espectros] TestRoom creada. Dale a Play. Controles: WASD/QE mover, botón derecho mirar, F linterna, " +
                       "P charco donde miras, K eliminar fantasma, N nuevo fantasma, 1/2/3 menú, M abrir menú.");
         }
