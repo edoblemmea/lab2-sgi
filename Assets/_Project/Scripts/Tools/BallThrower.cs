@@ -24,6 +24,7 @@ namespace Espectros
 
         readonly Queue<Ball> pool = new Queue<Ball>();
         GameSettings settings;
+        float rechargeTimer;
 
         void Awake()
         {
@@ -55,6 +56,14 @@ namespace Espectros
             Changed?.Invoke();
         }
 
+        // Al empezar una ronda: al menos las pelotas iniciales (si tenía más por las estrellas, se las queda)
+        public void RefillToStart()
+        {
+            Balls = Mathf.Max(Balls, GameSettings.Instance.ballsAtStart);
+            rechargeTimer = 0f;
+            Changed?.Invoke();
+        }
+
         public void AddBalls(int n)
         {
             Balls = Mathf.Min(GameSettings.Instance.maxBalls, Balls + n);
@@ -70,6 +79,19 @@ namespace Espectros
 
         void Update()
         {
+            // Recarga automática: una pelota cada ballRechargeTime segundos hasta tener las iniciales
+            if (settings != null && Balls < settings.ballsAtStart && settings.ballRechargeTime > 0f)
+            {
+                rechargeTimer += Time.deltaTime;
+                if (rechargeTimer >= settings.ballRechargeTime)
+                {
+                    rechargeTimer = 0f;
+                    Balls++;
+                    Changed?.Invoke();
+                }
+            }
+            else rechargeTimer = 0f;
+
 #if ENABLE_INPUT_SYSTEM
             var kb = Keyboard.current;
             if (kb != null && kb.bKey.wasPressedThisFrame && PlayerHead.Transform != null)

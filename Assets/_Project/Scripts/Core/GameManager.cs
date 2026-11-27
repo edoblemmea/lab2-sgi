@@ -98,6 +98,7 @@ namespace Espectros
             RoundIndex = Mathf.Clamp(index, 0, rounds.Count - 1);
             spawner.Clear();
             if (SurfaceLiquid.Instance != null) SurfaceLiquid.Instance.ClearAll();
+            if (BallThrower.Instance != null) BallThrower.Instance.RefillToStart();
             SetState(GameState.RoundIntro);
         }
 

@@ -122,6 +122,8 @@ namespace Espectros
         public float ballBounciness = 0.8f;
         [Tooltip("Segundos hasta que la pelota desaparece")]
         public float ballLifetime = 8f;
+        [Tooltip("Cada cuántos segundos se recarga una pelota (hasta tener Balls At Start; con estrellas se puede pasar)")]
+        public float ballRechargeTime = 4f;
 
         [Header("Puntos")]
         public int killScore = 100;
