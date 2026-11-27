@@ -115,10 +115,37 @@ namespace Espectros
         public float HideTimeMultiplier => ByDifficulty(hideTimeByDifficulty);
         public float RoundTimeMultiplier => ByDifficulty(roundTimeByDifficulty);
 
+        // Versión de los valores guardados en la escena. Si se cambian los valores por defecto en el código,
+        // se sube CurrentVersion y se añade el cambio en Migrate(): así las escenas ya creadas se actualizan solas.
+        const int CurrentVersion = 2;
+        // Empieza en 0: las escenas guardadas antes de existir este campo lo cargan como 0 y se migran.
+        [SerializeField, HideInInspector] int settingsVersion = 0;
+
+        // Al añadir el componente (o hacer Reset) ya tiene los valores actuales
+        void Reset() => settingsVersion = CurrentVersion;
+
+        void Migrate()
+        {
+            if (settingsVersion >= CurrentVersion) return;
+            if (settingsVersion < 2)
+            {
+                // Linterna más eficaz y fantasmas que tardan más en escaparse
+                flashlightAngle = 40f;
+                flashlightDamagePerSecond = 2f;
+                lightStunTime = 0.6f;
+                seenToFlee = 0.8f;
+                peekDuration = 2.5f;
+                fleeSpeedFactor = 1.8f;
+            }
+            settingsVersion = CurrentVersion;
+            Debug.Log("[Espectros] GameSettings actualizado a la versión " + CurrentVersion);
+        }
+
         void Awake()
         {
             if (instance != null && instance != this) { Destroy(this); return; }
             instance = this;
+            Migrate();
         }
 
         public void SetDifficulty(Difficulty d) { difficulty = d; NotifyChanged(); }
@@ -134,6 +161,7 @@ namespace Espectros
 
         void OnValidate()
         {
+            Migrate();
             if (Application.isPlaying) Changed?.Invoke();
         }
     }
