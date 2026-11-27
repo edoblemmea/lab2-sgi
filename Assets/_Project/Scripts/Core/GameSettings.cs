@@ -166,9 +166,9 @@ namespace Espectros
         public int starsPerHeart = 5;
 
         [Header("Sonar")]
-        public float sonarCooldown = 8f;
+        public float sonarCooldown = 3f;
         [Tooltip("Tiempo que se ven las siluetas a través de los muebles (s)")]
-        public float sonarSilhouetteTime = 1f;
+        public float sonarSilhouetteTime = 2.5f;
         [Tooltip("Velocidad de la onda sobre la mesh (m/s)")]
         public float sonarWaveSpeed = 4f;
         public float sonarRange = 6f;
@@ -190,7 +190,7 @@ namespace Espectros
 
         // Versión de los valores guardados en la escena. Si se cambian los valores por defecto en el código,
         // se sube CurrentVersion y se añade el cambio en Migrate(): así las escenas ya creadas se actualizan solas.
-        const int CurrentVersion = 3;
+        const int CurrentVersion = 4;
         // Empieza en 0: las escenas guardadas antes de existir este campo lo cargan como 0 y se migran.
         [SerializeField, HideInInspector] int settingsVersion = 0;
 
@@ -221,6 +221,12 @@ namespace Espectros
                 peekDuration = 4f;
                 fleeSpeedFactor = 1.2f;
                 hiddenTime = new Vector2(1.5f, 3.5f);
+            }
+            if (settingsVersion < 4)
+            {
+                // Sonar más frecuente y siluetas más largas, para que dé tiempo a apuntar
+                sonarCooldown = 3f;
+                sonarSilhouetteTime = 2.5f;
             }
             settingsVersion = CurrentVersion;
             Debug.Log("[Espectros] GameSettings actualizado a la versión " + CurrentVersion);
