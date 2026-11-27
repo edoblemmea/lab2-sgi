@@ -43,7 +43,7 @@ namespace Espectros
 
         void Awake()
         {
-            if (tracker == null) tracker = FindFirstObjectByType<HandTracker>();
+            if (tracker == null) tracker = FindAnyObjectByType<HandTracker>();
         }
 
         // ---- Métodos para los eventos de HandShapeDetector ----

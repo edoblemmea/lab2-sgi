@@ -42,7 +42,7 @@ namespace Espectros
         void Awake()
         {
             Instance = this;
-            if (xrOrigin == null) xrOrigin = FindFirstObjectByType<XROrigin>();
+            if (xrOrigin == null) xrOrigin = FindAnyObjectByType<XROrigin>();
             originTransform = xrOrigin != null ? xrOrigin.transform : null;
             left = new HandState(velocityFrames);
             right = new HandState(velocityFrames);

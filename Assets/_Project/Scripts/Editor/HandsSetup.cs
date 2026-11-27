@@ -76,7 +76,7 @@ namespace Espectros.EditorTools
             AssetDatabase.SaveAssets();
 
             // ---------- 2. Objetos de la escena ----------
-            var origin = Object.FindFirstObjectByType<XROrigin>();
+            var origin = Object.FindAnyObjectByType<XROrigin>();
             if (origin == null)
             {
                 EditorUtility.DisplayDialog("Espectros", "No hay ningún XR Origin en la escena abierta. Abre la escena Main.", "Vale");
