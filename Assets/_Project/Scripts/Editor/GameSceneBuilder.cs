@@ -201,6 +201,8 @@ namespace Espectros.EditorTools
             }
 
             BuildFlashlight(cam);
+            var flashlight = Object.FindAnyObjectByType<Flashlight>();
+            if (flashlight != null) Set(flashlight, "beamMaterial", a.lightBeam);
             var tutorialText = BuildHud(cam);
             Set(tutorial, "tutorialText", tutorialText);
             BuildWristMenu();

@@ -18,7 +18,7 @@ namespace Espectros.EditorTools
         public class Assets
         {
             public Material debugSpot, liquid, screenFlash, occluder, meshDebug, roomWall, roomFurniture;
-            public Material ghostTint, ghostSilhouette, sonarWave, ball, star, paint;
+            public Material ghostTint, ghostSilhouette, sonarWave, ball, star, paint, lightBeam;
             public PhysicsMaterial ballPhysics;
             public GhostType whiteGhost, mischiefGhost, invisibleGhost;
             public GhostController ghostPrefab;
@@ -59,6 +59,7 @@ namespace Espectros.EditorTools
             a.star = EnsureMaterial("M_Star", "Custom/UnlitColor", m => m.SetColor("_Color", new Color(1f, 0.85f, 0.2f)));
             a.ballPhysics = EnsurePhysicsMaterial();
             a.paint = EnsureMaterial("M_Paint", "Custom/UnlitColor", m => m.SetColor("_Color", Color.magenta));
+            a.lightBeam = EnsureMaterial("M_LightBeam", "Custom/LightBeam", null);
 
             a.whiteGhost = EnsureAsset<GhostType>($"{Ghosts}/GT_White.asset", t =>
             {

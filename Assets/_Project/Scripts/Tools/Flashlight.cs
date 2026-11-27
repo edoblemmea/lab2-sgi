@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -18,6 +19,13 @@ namespace Espectros
         [SerializeField] Light spotLight;
         [Tooltip("Modelo de la linterna (opcional)")]
         [SerializeField] GameObject model;
+        [Tooltip("Material del haz visible (Custom/LightBeam). Si está vacío no se dibuja el haz")]
+        [SerializeField] Material beamMaterial;
+        [Tooltip("El haz empieza este poco por delante de la linterna (m)")]
+        [SerializeField] float beamStartOffset = 0.04f;
+
+        Transform beam;
+        float beamLength;
 
         public float Battery { get; private set; }
         public float BatteryFraction => GameSettings.Instance.flashlightBattery > 0f ? Battery / GameSettings.Instance.flashlightBattery : 0f;
@@ -33,6 +41,7 @@ namespace Espectros
             if (router == null) router = FindAnyObjectByType<HandGestureRouter>();
             if (tracker == null) tracker = FindAnyObjectByType<HandTracker>();
             Battery = settings.flashlightBattery;
+            if (beamMaterial != null) CreateBeam();
             if (spotLight != null)
             {
                 spotLight.type = LightType.Spot;
@@ -84,6 +93,7 @@ namespace Espectros
                 spotLight.intensity = settings.flashlightIntensity;
                 spotLight.color = settings.flashlightColor;
             }
+            UpdateBeam();
             LightGhosts();
         }
 
@@ -111,9 +121,86 @@ namespace Espectros
             }
         }
 
+        // ---------- Haz visible ----------
+        // Cono de 1 m de largo con el ángulo de la linterna; se escala con la distancia hasta el primer obstáculo,
+        // así el haz se corta en la mesh y en los muebles (y no ilumina las superficies reales)
+
+        void CreateBeam()
+        {
+            var go = new GameObject("Beam");
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = Vector3.forward * beamStartOffset;
+            go.AddComponent<MeshFilter>().sharedMesh = BuildCone(settings.flashlightAngle);
+            var mr = go.AddComponent<MeshRenderer>();
+            mr.sharedMaterial = beamMaterial;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            mr.receiveShadows = false;
+            beam = go.transform;
+            beam.gameObject.SetActive(false);
+            beamAngle = settings.flashlightAngle;
+        }
+
+        float beamAngle;
+
+        void UpdateBeam()
+        {
+            if (beam == null) return;
+            // Si se cambia el ángulo en los ajustes, se rehace el cono
+            if (!Mathf.Approximately(beamAngle, settings.flashlightAngle))
+            {
+                beamAngle = settings.flashlightAngle;
+                beam.GetComponent<MeshFilter>().sharedMesh = BuildCone(beamAngle);
+            }
+            Vector3 origin = beam.position;
+            float target = settings.flashlightRange;
+            if (Physics.Raycast(origin, transform.forward, out var hit, settings.flashlightRange, Layers.OccluderMask, QueryTriggerInteraction.Ignore))
+                target = hit.distance;
+            beamLength = Mathf.Lerp(beamLength <= 0f ? target : beamLength, target, 1f - Mathf.Exp(-25f * Time.deltaTime));
+            beam.localScale = Vector3.one * Mathf.Max(0.05f, beamLength);
+        }
+
+        // Cono abierto: vértice en el origen, base a z = 1, uv.y = distancia a lo largo
+        static Mesh BuildCone(float angle)
+        {
+            const int seg = 24, rings = 6;
+            float r = Mathf.Tan(angle * 0.5f * Mathf.Deg2Rad);
+            var v = new List<Vector3>();
+            var n = new List<Vector3>();
+            var uv = new List<Vector2>();
+            var t = new List<int>();
+            for (int k = 0; k <= rings; k++)
+            {
+                float z = k / (float)rings;
+                for (int i = 0; i <= seg; i++)
+                {
+                    float a = i / (float)seg * Mathf.PI * 2f;
+                    var dir = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f);
+                    v.Add(dir * (r * z) + Vector3.forward * z);
+                    n.Add((dir - Vector3.forward * r).normalized);
+                    uv.Add(new Vector2(i / (float)seg, z));
+                }
+            }
+            for (int k = 0; k < rings; k++)
+                for (int i = 0; i < seg; i++)
+                {
+                    int a = k * (seg + 1) + i, b = a + seg + 1;
+                    t.Add(a); t.Add(b); t.Add(a + 1);
+                    t.Add(a + 1); t.Add(b); t.Add(b + 1);
+                }
+            var m = new Mesh { name = "FlashlightBeam" };
+            m.SetVertices(v);
+            m.SetNormals(n);
+            m.SetUVs(0, uv);
+            m.SetTriangles(t, 0);
+            m.bounds = new Bounds(Vector3.forward * 0.5f, new Vector3(2f * r + 0.1f, 2f * r + 0.1f, 1.1f));
+            return m;
+        }
+
         void SetOn(bool on)
         {
             IsOn = on;
+            if (beam != null) { beam.gameObject.SetActive(on); if (on) beamLength = 0f; }
+            if (on && AudioManager.Instance != null) AudioManager.Instance.PlayAt(SfxLibrary.Click, transform.position, 0.6f);
             if (spotLight != null) spotLight.enabled = on;
             if (model != null) model.SetActive(on);
             Toggled?.Invoke(on);
