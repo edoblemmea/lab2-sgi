@@ -20,7 +20,7 @@ namespace Espectros.EditorTools
         const string TestRoomPath = "Assets/Scenes/TestRoom.unity";
         const string TestRoomMeshes = GameAssetsBuilder.Root + "/TestRoom";
 
-        [MenuItem("Espectros/Fase 2: configurar juego en la escena abierta")]
+        [MenuItem("Espectros/Configurar juego en la escena abierta")]
         public static void SetupOpenScene()
         {
             var origin = Object.FindAnyObjectByType<XROrigin>();
@@ -122,7 +122,7 @@ namespace Espectros.EditorTools
             EditorSceneManager.SaveScene(scene, TestRoomPath);
             VerifyReferences();
             Debug.Log("[Espectros] TestRoom creada. Dale a Play. Controles: WASD/QE mover, botón derecho mirar, F linterna, " +
-                      "P charco donde miras, K eliminar fantasma, N nuevo fantasma, 1/2/3 menú, M abrir menú.");
+                      "B pelota, C sonar, P charco donde miras, K eliminar fantasma, N nuevo fantasma, 1/2/3 menú, M abrir menú.");
         }
 
         // ---------- Sistemas del juego ----------
@@ -160,6 +160,24 @@ namespace Espectros.EditorTools
             Set(liquid, "liquidMaterial", a.liquid);
 
             GetOrAdd<DebugKeys>(sys);
+            GetOrAdd<AudioManager>(sys);
+            GetOrAdd<ScoreManager>(sys);
+
+            // Fase 3: pelota, estrellas y sonar
+            var thrower = GetOrAdd<BallThrower>(sys);
+            Set(thrower, "ballPrefab", a.ballPrefab);
+            Set(thrower, "ballMaterial", a.ballPhysics);
+            Set(thrower, "router", Object.FindAnyObjectByType<HandGestureRouter>());
+
+            var stars = GetOrAdd<StarSpawner>(sys);
+            Set(stars, "starPrefab", a.starPrefab);
+
+            var sonar = GetOrAdd<Sonar>(sys);
+            Set(sonar, "router", Object.FindAnyObjectByType<HandGestureRouter>());
+            Set(sonar, "waveMaterial", a.sonarWave);
+            Set(sonar, "silhouetteMaterial", a.ghostSilhouette);
+
+            var tutorial = GetOrAdd<TutorialManager>(sys);
 
             if (!testRoom)
             {
@@ -178,7 +196,8 @@ namespace Espectros.EditorTools
             }
 
             BuildFlashlight(cam);
-            BuildHud(cam);
+            var tutorialText = BuildHud(cam);
+            Set(tutorial, "tutorialText", tutorialText);
             BuildWristMenu();
         }
 
@@ -227,9 +246,9 @@ namespace Espectros.EditorTools
             if (modelT != null) Set(fl, "model", modelT.gameObject);
         }
 
-        static void BuildHud(Camera cam)
+        static TextMeshPro BuildHud(Camera cam)
         {
-            if (cam == null) return;
+            if (cam == null) return null;
             var hud = FindOrCreate("HUD", cam.transform);
             var gh = GetOrAdd<GameHud>(hud);
 
@@ -239,6 +258,10 @@ namespace Espectros.EditorTools
             Set(gh, "statusText", status);
             Set(gh, "messageText", message);
             Set(gh, "flashlight", Object.FindAnyObjectByType<Flashlight>());
+
+            var tutorial = MakeText("TutorialText", hud.transform, new Vector3(0f, -0.12f, 0.8f), 0.45f, new Vector2(1.1f, 0.4f));
+            tutorial.color = new Color(0.85f, 0.95f, 1f);
+            return tutorial;
         }
 
         static TextMeshPro MakeText(string name, Transform parent, Vector3 localPos, float size, Vector2 rect)

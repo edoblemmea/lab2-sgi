@@ -111,6 +111,58 @@ namespace Espectros
         [Tooltip("Velocidad máxima de la mano para abrirlo (m/s)")]
         public float wristMenuMaxHandSpeed = 0.35f;
 
+        [Header("Pelota")]
+        public int ballsAtStart = 5;
+        public int maxBalls = 10;
+        [Tooltip("Multiplicador de la velocidad de la mano al lanzar")]
+        public float ballThrowMultiplier = 1.5f;
+        public float ballMinSpeed = 2.5f;
+        public float ballMaxSpeed = 9f;
+        [Tooltip("Rebote del Physic Material (0-1)")]
+        public float ballBounciness = 0.8f;
+        [Tooltip("Segundos hasta que la pelota desaparece")]
+        public float ballLifetime = 8f;
+        [Tooltip("Cada cuántos segundos se recarga una pelota (hasta tener Balls At Start; con estrellas se puede pasar)")]
+        public float ballRechargeTime = 4f;
+
+        [Header("Puntos")]
+        public int killScore = 100;
+        [Tooltip("Puntos extra por cada rebote antes de dar al fantasma (carambola)")]
+        public int bounceBonus = 50;
+
+        [Header("Estrellas")]
+        [Tooltip("Estrellas a la vez en la habitación")]
+        public int starsAtOnce = 2;
+        [Tooltip("Segundos entre una estrella recogida y la siguiente")]
+        public float starRespawnTime = 8f;
+        [Tooltip("Distancia de la mano para recogerla (m)")]
+        public float starPickupDistance = 0.12f;
+        [Tooltip("Distancia de la cabeza para recogerla si no hay manos (editor) (m)")]
+        public float starPickupDistanceNoHands = 0.7f;
+        [Tooltip("Segundos de batería que recarga")]
+        public float starBatteryRecharge = 15f;
+        [Tooltip("Pelotas que da")]
+        public int starBalls = 2;
+        [Tooltip("Cada cuántas estrellas se gana un corazón")]
+        public int starsPerHeart = 5;
+
+        [Header("Sonar")]
+        public float sonarCooldown = 8f;
+        [Tooltip("Tiempo que se ven las siluetas a través de los muebles (s)")]
+        public float sonarSilhouetteTime = 1f;
+        [Tooltip("Velocidad de la onda sobre la mesh (m/s)")]
+        public float sonarWaveSpeed = 4f;
+        public float sonarRange = 6f;
+
+        [Header("Sonido")]
+        [Range(0f, 1f)] public float ghostAmbientVolume = 0.35f;
+        [Range(0f, 1f)] public float effectsVolume = 0.8f;
+
+        [Header("Tutorial")]
+        public bool showTutorial = true;
+        [Tooltip("Si no se hace el gesto en este tiempo, se pasa al siguiente paso (s)")]
+        public float tutorialStepTimeout = 20f;
+
         // ---- Valores derivados de la dificultad ----
         float ByDifficulty(Vector3 v) => difficulty == Difficulty.Easy ? v.x : difficulty == Difficulty.Hard ? v.z : v.y;
         public float GhostSpeedMultiplier => ByDifficulty(ghostSpeedByDifficulty);

@@ -25,6 +25,7 @@ namespace Espectros
         public int PendingCount => queue.Count;
         public int RemainingCount => alive.Count + queue.Count;
         public event Action<GhostController> GhostDied;
+        public event Action<GhostController> GhostSpawned;
 
         void Awake() => Instance = this;
 
@@ -78,6 +79,7 @@ namespace Espectros
             ghost.Init(type, entry, exit, speedMultiplier);
             ghost.Died += OnGhostDied;
             alive.Add(ghost);
+            GhostSpawned?.Invoke(ghost);
             return ghost;
         }
 

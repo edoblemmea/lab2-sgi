@@ -22,6 +22,8 @@ namespace Espectros
         [SerializeField] AudioSource audioSource;
         [Tooltip("Texto de depuración (si está vacío se crea solo)")]
         [SerializeField] TMP_Text debugLabel;
+        [Tooltip("Capa de color del tipo de fantasma (Custom/GhostOverlay)")]
+        [SerializeField] Material tintMaterial;
 
         public GhostType Type { get; private set; }
         public GhostState State { get; private set; } = GhostState.Entering;
@@ -45,6 +47,11 @@ namespace Espectros
         float speedMultiplier = 1f;
         float stateTime, hiddenDuration, seenTimer, stunTimer, flashTimer, revealedUntil = -1f;
         bool litThisFrame;
+        Material[][] baseMaterials;
+        Material silhouetteMaterial;
+        float silhouetteUntil = -1f;
+        bool silhouetteShown;
+        AudioSource ambient;
         float lastLitTime = -10f;
 
         // Paralizado por la luz: no se mueve ni puede huir mientras lo iluminan y un rato después
@@ -59,6 +66,8 @@ namespace Espectros
             col = GetComponent<SphereCollider>();
             col.isTrigger = true;
             renderers = GetComponentsInChildren<Renderer>();
+            baseMaterials = new Material[renderers.Length][];
+            for (int i = 0; i < renderers.Length; i++) baseMaterials[i] = renderers[i].sharedMaterials;
             mpb = new MaterialPropertyBlock();
             if (animator == null) animator = GetComponentInChildren<Animator>();
             if (visual != null) visualBasePos = visual.localPosition;
@@ -79,8 +88,10 @@ namespace Espectros
             exitPoint = exit;
             col.radius = type.size * 0.4f;
             if (debugLabel == null) CreateDebugLabel();
+            RefreshMaterials();
             ApplyColor(0f);
-            Play(type.appearSound);
+            StartAmbient();
+            Play(type.appearSound, SfxLibrary.GhostAppear);
             SetState(GhostState.Entering);
         }
 
@@ -203,7 +214,7 @@ namespace Espectros
 
                 case GhostState.Scaring:
                     PlayAnim("attack");
-                    Play(Type.scareSound);
+                    Play(Type.scareSound, SfxLibrary.GhostScare);
                     if (PlayerHealth.Instance != null) PlayerHealth.Instance.Scare();
                     break;
 
@@ -295,7 +306,8 @@ namespace Espectros
             State = GhostState.Dying;
             if (finder != null) finder.Release(spot, this);
             col.enabled = false;
-            Play(Type.dieSound);
+            Play(Type.dieSound, SfxLibrary.GhostDie);
+            if (ambient != null) ambient.Stop();
             PlayAnim("dissolve");
             Debug.Log($"[Espectros] Fantasma {Type.displayName} eliminado");
             StartCoroutine(DieRoutine());
@@ -351,7 +363,9 @@ namespace Espectros
                 visual.localPosition = visualBasePos + Vector3.up * Mathf.Sin((Time.time + bobPhase) * 2f) * 0.03f;
 
             // El invisible solo se ve si está revelado (o en modo depuración)
-            bool visible = Type.weakness != GhostWeakness.PaintThenFlashlight || IsRevealed || settings.debugMode;
+            bool silhouette = Time.time < silhouetteUntil;
+            if (silhouette != silhouetteShown) RefreshMaterials();
+            bool visible = Type.weakness != GhostWeakness.PaintThenFlashlight || IsRevealed || settings.debugMode || silhouette;
             foreach (var r in renderers) if (r != null) r.enabled = visible;
 
             if (flashTimer > 0f) flashTimer -= Time.deltaTime;
@@ -380,9 +394,55 @@ namespace Espectros
             if (animator.HasState(0, hash)) animator.CrossFade(hash, 0.1f, 0);
         }
 
-        void Play(AudioClip clip)
+        void Play(AudioClip clip, AudioClip fallback = null)
         {
-            if (clip != null && audioSource != null) audioSource.PlayOneShot(clip);
+            if (clip == null) clip = fallback;
+            if (clip == null) return;
+            float vol = settings != null ? settings.effectsVolume : 1f;
+            if (audioSource != null) audioSource.PlayOneShot(clip, vol);
+            else if (AudioManager.Instance != null) AudioManager.Instance.PlayAt(clip, transform.position);
+        }
+
+        // Lamento en bucle con sonido espacial: se oye de dónde viene aunque esté escondido detrás de un mueble
+        void StartAmbient()
+        {
+            if (ambient == null)
+            {
+                ambient = AudioManager.Make3D(gameObject.AddComponent<AudioSource>());
+                ambient.loop = true;
+                ambient.maxDistance = 6f;
+            }
+            ambient.clip = SfxLibrary.GhostMoan;
+            ambient.volume = settings.ghostAmbientVolume;
+            // Cada tipo con un tono distinto (el travieso, más agudo)
+            ambient.pitch = (Type.weakness == GhostWeakness.Ball ? 1.5f : 1f) * UnityEngine.Random.Range(0.9f, 1.1f);
+            ambient.time = UnityEngine.Random.Range(0f, ambient.clip.length * 0.9f);
+            ambient.Play();
+        }
+
+        // ---------- Silueta del sonar (se ve a través de los muebles) ----------
+
+        public void ShowSilhouette(float seconds, Material mat)
+        {
+            if (mat == null) return;
+            silhouetteMaterial = mat;
+            silhouetteUntil = Time.time + seconds;
+            RefreshMaterials();
+        }
+
+        // Materiales del modelo + capa de color del tipo + silueta (si el sonar está activo)
+        void RefreshMaterials()
+        {
+            silhouetteShown = Time.time < silhouetteUntil && silhouetteMaterial != null;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                var r = renderers[i];
+                if (r == null) continue;
+                var mats = new List<Material>(baseMaterials[i]);
+                if (tintMaterial != null) mats.Add(tintMaterial);
+                if (silhouetteShown) mats.Add(silhouetteMaterial);
+                r.sharedMaterials = mats.ToArray();
+            }
         }
 
         void CreateDebugLabel()

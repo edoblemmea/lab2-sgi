@@ -4,10 +4,10 @@ using UnityEngine;
 
 namespace Espectros
 {
-    public enum GameState { WaitingScene, RoundIntro, Playing, Enraged, RoundWon, GameOver, Victory }
+    public enum GameState { WaitingScene, Tutorial, RoundIntro, Playing, Enraged, RoundWon, GameOver, Victory }
 
     // Rondas, temporizador, corazones y modo furia.
-    // WaitingScene -> RoundIntro -> Playing -> (Enraged) -> RoundWon -> ... -> Victory / GameOver
+    // WaitingScene -> (Tutorial) -> RoundIntro -> Playing -> (Enraged) -> RoundWon -> ... -> Victory / GameOver
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
@@ -67,6 +67,18 @@ namespace Espectros
         {
             StarWallet.Reset();
             if (health != null) health.ResetHearts();
+            if (ScoreManager.Instance != null) ScoreManager.Instance.ResetScore();
+            if (BallThrower.Instance != null) BallThrower.Instance.ResetBalls();
+
+            // La primera vez, tutorial de los gestos antes de la ronda 1
+            var tutorial = TutorialManager.Instance;
+            if (tutorial != null && settings.showTutorial && !tutorial.Done)
+            {
+                spawner.Clear();
+                SetState(GameState.Tutorial);
+                tutorial.Begin(() => StartRound(0));
+                return;
+            }
             StartRound(0);
         }
 
@@ -86,6 +98,7 @@ namespace Espectros
             RoundIndex = Mathf.Clamp(index, 0, rounds.Count - 1);
             spawner.Clear();
             if (SurfaceLiquid.Instance != null) SurfaceLiquid.Instance.ClearAll();
+            if (BallThrower.Instance != null) BallThrower.Instance.RefillToStart();
             SetState(GameState.RoundIntro);
         }
 
