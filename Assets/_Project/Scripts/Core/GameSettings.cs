@@ -125,6 +125,19 @@ namespace Espectros
         [Tooltip("Cada cuántos segundos se recarga una pelota (hasta tener Balls At Start; con estrellas se puede pasar)")]
         public float ballRechargeTime = 4f;
 
+        [Header("Pintura (revela al fantasma invisible)")]
+        public float paintThrowMultiplier = 1.4f;
+        public float paintMinSpeed = 3f;
+        public float paintMaxSpeed = 8f;
+        [Tooltip("Tiempo mínimo entre dos lanzamientos (s)")]
+        public float paintCooldown = 0.4f;
+        [Tooltip("Radio de la mancha (m)")]
+        public float paintRadius = 0.18f;
+        [Tooltip("Tiempo que el fantasma invisible queda visible y vulnerable a la linterna (s)")]
+        public float paintRevealTime = 6f;
+        [Tooltip("Distancia del impacto a la que la pintura revela a un fantasma (m)")]
+        public float paintRevealRadius = 0.5f;
+
         [Header("Puntos")]
         public int killScore = 100;
         [Tooltip("Puntos extra por cada rebote antes de dar al fantasma (carambola)")]

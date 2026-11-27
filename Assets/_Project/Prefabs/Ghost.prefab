@@ -197,6 +197,7 @@ MonoBehaviour:
   visual: {fileID: 2554230935044766872}
   audioSource: {fileID: 7631845087769959017}
   debugLabel: {fileID: 0}
+  tintMaterial: {fileID: 2100000, guid: bfb26d5189161cf45b3ace180d289d69, type: 2}
 --- !u!1 &1836438109760262703
 GameObject:
   m_ObjectHideFlags: 0

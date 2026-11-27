@@ -19,4 +19,4 @@ MonoBehaviour:
   spawnInterval: 4
   maxAlive: 2
   ghostSpeedMultiplier: 1
-  stars: 0
+  stars: 3

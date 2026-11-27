@@ -18,12 +18,13 @@ namespace Espectros.EditorTools
         public class Assets
         {
             public Material debugSpot, liquid, screenFlash, occluder, meshDebug, roomWall, roomFurniture;
-            public Material ghostTint, ghostSilhouette, sonarWave, ball, star;
+            public Material ghostTint, ghostSilhouette, sonarWave, ball, star, paint;
             public PhysicsMaterial ballPhysics;
-            public GhostType whiteGhost, mischiefGhost;
+            public GhostType whiteGhost, mischiefGhost, invisibleGhost;
             public GhostController ghostPrefab;
             public Ball ballPrefab;
             public Star starPrefab;
+            public PaintBlob paintPrefab;
             public List<RoundConfig> rounds = new List<RoundConfig>();
         }
 
@@ -57,6 +58,7 @@ namespace Espectros.EditorTools
             });
             a.star = EnsureMaterial("M_Star", "Custom/UnlitColor", m => m.SetColor("_Color", new Color(1f, 0.85f, 0.2f)));
             a.ballPhysics = EnsurePhysicsMaterial();
+            a.paint = EnsureMaterial("M_Paint", "Custom/UnlitColor", m => m.SetColor("_Color", Color.magenta));
 
             a.whiteGhost = EnsureAsset<GhostType>($"{Ghosts}/GT_White.asset", t =>
             {
@@ -86,10 +88,23 @@ namespace Espectros.EditorTools
                 EditorUtility.SetDirty(a.whiteGhost);
             }
 
+            a.invisibleGhost = EnsureAsset<GhostType>($"{Ghosts}/GT_Invisible.asset", t =>
+            {
+                t.displayName = "Invisible";
+                t.color = new Color(0.75f, 0.4f, 1f, 1f);
+                t.speed = 0.55f;
+                t.health = 1.5f;
+                t.weakness = GhostWeakness.PaintThenFlashlight;
+                t.size = 0.45f;
+                t.hint = "¡Fantasma invisible! Escucha de dónde viene su lamento, lánzale pintura (pellizco y soltar) " +
+                         "y después ilumínalo con la linterna";
+            });
+
             a.ghostPrefab = EnsureGhostPrefab();
             UpdateGhostPrefab(a.ghostPrefab, a.ghostTint);
             a.ballPrefab = EnsureBallPrefab(a.ball, a.ballPhysics);
             a.starPrefab = EnsureStarPrefab(a.star);
+            a.paintPrefab = EnsurePaintPrefab(a.paint);
 
             // 5 rondas solo con fantasmas blancos (los demás tipos llegan en las fases 3 y extras)
             int[] counts = { 2, 3, 4, 5, 6 };
@@ -111,6 +126,7 @@ namespace Espectros.EditorTools
 
             // Fase 3: fantasmas traviesos a partir de la ronda 2 y estrellas en todas (también en rondas ya creadas)
             int[] mischief = { 0, 1, 2, 3, 3 };
+            int[] invisible = { 0, 0, 0, 2, 2 }; // extra: fantasma invisible en las rondas 4 y 5
             for (int i = 0; i < a.rounds.Count; i++)
             {
                 var r = a.rounds[i];
@@ -119,6 +135,11 @@ namespace Espectros.EditorTools
                 if (mischief[i] > 0 && !r.ghosts.Exists(e => e.type == a.mischiefGhost))
                 {
                     r.ghosts.Add(new RoundConfig.Entry { type = a.mischiefGhost, count = mischief[i] });
+                    changed = true;
+                }
+                if (invisible[i] > 0 && !r.ghosts.Exists(e => e.type == a.invisibleGhost))
+                {
+                    r.ghosts.Add(new RoundConfig.Entry { type = a.invisibleGhost, count = invisible[i] });
                     changed = true;
                 }
                 if (r.stars == 0) { r.stars = 3; changed = true; }
@@ -191,6 +212,30 @@ namespace Espectros.EditorTools
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
             Object.DestroyImmediate(go);
             return prefab.GetComponent<Ball>();
+        }
+
+        static PaintBlob EnsurePaintPrefab(Material mat)
+        {
+            string path = $"{Prefabs}/PaintBlob.prefab";
+            var existing = AssetDatabase.LoadAssetAtPath<PaintBlob>(path);
+            if (existing != null) return existing;
+
+            var root = new GameObject("PaintBlob") { layer = LayerMask.NameToLayer("Projectile") };
+            var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            sphere.name = "Visual";
+            Object.DestroyImmediate(sphere.GetComponent<Collider>()); // se mueve con rayos, sin física
+            sphere.transform.SetParent(root.transform, false);
+            sphere.transform.localScale = Vector3.one * 0.05f;
+            var mr = sphere.GetComponent<MeshRenderer>();
+            mr.sharedMaterial = mat;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var blob = root.AddComponent<PaintBlob>();
+            var so = new SerializedObject(blob);
+            so.FindProperty("visual").objectReferenceValue = mr;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+            Object.DestroyImmediate(root);
+            return prefab.GetComponent<PaintBlob>();
         }
 
         static Star EnsureStarPrefab(Material mat)

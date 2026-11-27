@@ -256,6 +256,7 @@ namespace Espectros
         public void ApplyLight(float amount)
         {
             if (!IsAlive) return;
+            if (Type.weakness == GhostWeakness.PaintThenFlashlight && !IsRevealed) return; // invisible: la luz lo atraviesa
             litThisFrame = true;
             bool vulnerable = Type.weakness == GhostWeakness.Flashlight
                               || (Type.weakness == GhostWeakness.PaintThenFlashlight && IsRevealed);

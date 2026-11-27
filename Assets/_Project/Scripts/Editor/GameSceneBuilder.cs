@@ -122,7 +122,7 @@ namespace Espectros.EditorTools
             EditorSceneManager.SaveScene(scene, TestRoomPath);
             VerifyReferences();
             Debug.Log("[Espectros] TestRoom creada. Dale a Play. Controles: WASD/QE mover, botón derecho mirar, F linterna, " +
-                      "B pelota, C sonar, P charco donde miras, K eliminar fantasma, N nuevo fantasma, 1/2/3 menú, M abrir menú.");
+                      "B pelota, V pintura, C sonar, P charco donde miras, K eliminar fantasma, N nuevo fantasma, 1/2/3 menú, M abrir menú.");
         }
 
         // ---------- Sistemas del juego ----------
@@ -159,7 +159,8 @@ namespace Espectros.EditorTools
             var liquid = GetOrAdd<SurfaceLiquid>(sys);
             Set(liquid, "liquidMaterial", a.liquid);
 
-            GetOrAdd<DebugKeys>(sys);
+            var keys = GetOrAdd<DebugKeys>(sys);
+            Set(keys, "invisibleType", a.invisibleGhost);
             GetOrAdd<AudioManager>(sys);
             GetOrAdd<ScoreManager>(sys);
 
@@ -168,6 +169,10 @@ namespace Espectros.EditorTools
             Set(thrower, "ballPrefab", a.ballPrefab);
             Set(thrower, "ballMaterial", a.ballPhysics);
             Set(thrower, "router", Object.FindAnyObjectByType<HandGestureRouter>());
+
+            var paint = GetOrAdd<PaintThrower>(sys);
+            Set(paint, "blobPrefab", a.paintPrefab);
+            Set(paint, "router", Object.FindAnyObjectByType<HandGestureRouter>());
 
             var stars = GetOrAdd<StarSpawner>(sys);
             Set(stars, "starPrefab", a.starPrefab);

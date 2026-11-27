@@ -18,6 +18,7 @@ MonoBehaviour:
   health: 1.5
   weakness: 0
   size: 0.45
+  hint: "Fantasma blanco: ilum\xEDnalo con la linterna (palma derecha hacia delante)"
   prefab: {fileID: 0}
   appearSound: {fileID: 0}
   scareSound: {fileID: 0}

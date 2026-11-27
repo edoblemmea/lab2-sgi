@@ -9,10 +9,13 @@ namespace Espectros
     //   P  charco donde mira la cámara (para probar SurfaceLiquid en bordes y esquinas)
     //   K  elimina el fantasma más cercano (se derrite en un charco)
     //   N  hace aparecer un fantasma
-    //   F  linterna (en Flashlight)   1/2/3/M  menú de muñeca (en WristMenu)
+    //   F  linterna (en Flashlight)   B pelota   V pintura   C sonar   1/2/3/M  menú de muñeca (en WristMenu)
+    //   I  hace aparecer un fantasma invisible
     public class DebugKeys : MonoBehaviour
     {
         [SerializeField] Color puddleColor = new Color(0.45f, 1f, 0.55f, 0.85f);
+        [Tooltip("Tipo que aparece con la tecla I (fantasma invisible)")]
+        [SerializeField] GhostType invisibleType;
 
         void Update()
         {
@@ -42,6 +45,9 @@ namespace Espectros
 
             if (kb.nKey.wasPressedThisFrame && GhostSpawner.Instance != null)
                 GhostSpawner.Instance.Spawn(null);
+
+            if (kb.iKey.wasPressedThisFrame && GhostSpawner.Instance != null && invisibleType != null)
+                GhostSpawner.Instance.Spawn(invisibleType);
 #endif
         }
     }

@@ -15,8 +15,10 @@ MonoBehaviour:
   ghosts:
   - type: {fileID: 11400000, guid: cd7eedcd630edba498f050c0be87acb4, type: 2}
     count: 4
+  - type: {fileID: 11400000, guid: 7ab53874862e22a47b55c2174d0fd5fb, type: 2}
+    count: 2
   duration: 100
   spawnInterval: 4
   maxAlive: 3
   ghostSpeedMultiplier: 1.1
-  stars: 0
+  stars: 3
