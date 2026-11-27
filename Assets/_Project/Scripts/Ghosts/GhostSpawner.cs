@@ -96,6 +96,7 @@ namespace Espectros
             ghost.Init(type, entry, exit, speedMultiplier);
             ghost.Died += OnGhostDied;
             alive.Add(ghost);
+            Debug.Log($"[Espectros] Aparece fantasma {type.displayName} (vivos {alive.Count}, por salir {queue.Count} + {lateQueue.Count} al final)");
             GhostSpawned?.Invoke(ghost);
             return ghost;
         }
