@@ -57,17 +57,28 @@ namespace Espectros
                 return;
             }
 
+            // Solo activamos los managers cuando están concedidos TODOS los permisos:
+            // si falta uno, el casco responde ERROR_PACKAGE_UNTRUSTED en cada frame.
             var callbacks = new PermissionCallbacks();
             callbacks.PermissionGranted += p =>
             {
                 Debug.Log("[Espectros] Concedido: " + p);
-                EnableManagers();
+                if (AllGranted()) EnableManagers();
             };
             callbacks.PermissionDenied += p =>
                 Debug.LogError("[Espectros] DENEGADO: " + p + ". Actívalo en Ajustes > Privacidad y seguridad > Datos espaciales.");
             Permission.RequestUserPermissions(ScenePermissions, callbacks);
 #endif
         }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        static bool AllGranted()
+        {
+            foreach (var p in ScenePermissions)
+                if (!Permission.HasUserAuthorizedPermission(p)) return false;
+            return true;
+        }
+#endif
 
         void EnableManagers()
         {
