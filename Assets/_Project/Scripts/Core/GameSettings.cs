@@ -139,6 +139,10 @@ namespace Espectros
         public float paintRevealRadius = 0.5f;
         [Tooltip("Tamaño de la mancha que se queda pegada al fantasma (m)")]
         public float paintOnGhostRadius = 0.09f;
+        [Tooltip("Cuánto más claro se ve el fantasma invisible cuando está revelado (0 = su color, 1 = blanco)")]
+        [Range(0f, 1f)] public float revealedBrightness = 0.5f;
+        [Tooltip("Brillo del borde del fantasma invisible revelado")]
+        public float revealedGlow = 1.4f;
 
         [Header("Puntos")]
         public int killScore = 100;

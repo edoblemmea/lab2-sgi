@@ -43,6 +43,7 @@ namespace Espectros
         MaterialPropertyBlock mpb;
         static readonly int ColorId = Shader.PropertyToID("_Color");
         static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        static readonly int IntensityId = Shader.PropertyToID("_Intensity");
 
         HidingSpot spot;
         Vector3 exitPoint;
@@ -430,7 +431,13 @@ namespace Espectros
 
             UpdatePaint();
             if (flashTimer > 0f) flashTimer -= Time.deltaTime;
-            ApplyColor(flashTimer > 0f || litThisFrame ? 0.6f : 0f);
+            // El invisible, cuando está revelado, se ve más claro y con más brillo para distinguirlo bien
+            bool revealedInvisible = Type.weakness == GhostWeakness.PaintThenFlashlight && IsRevealed;
+            float white = flashTimer > 0f || litThisFrame ? 0.6f : 0f;
+            if (revealedInvisible) white = Mathf.Max(white, settings.revealedBrightness);
+            if (tintMaterial != null)
+                mpb.SetFloat(IntensityId, revealedInvisible ? settings.revealedGlow : tintMaterial.GetFloat(IntensityId));
+            ApplyColor(white);
 
             if (debugLabel != null)
             {
