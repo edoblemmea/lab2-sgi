@@ -53,7 +53,7 @@ namespace Espectros.EditorTools
                     case "StatusText":
                     case "GestureDebugText":
                         Apply(t, body, hudMat, Cream);
-                        t.fontStyle = FontStyles.UpperCase;
+                        t.fontStyle = FontStyles.Normal;
                         changed++;
                         break;
                     case "MessageText":
@@ -98,9 +98,9 @@ namespace Espectros.EditorTools
                         t.font = isTitle ? title : body;
                         t.fontSharedMaterial = isTitle ? title.material : body.material;
                         t.color = isTitle ? StampRed : Ink;
-                        if (isTitle) { t.text = "ESPECTROS"; t.characterSpacing = 8f; }
-                        else t.alignment = TextAlignmentOptions.MidlineLeft;
-                        if (t.transform.parent != null && t.transform.parent.name == "Btn_Restart") t.text = "[ ] Reiniciar ronda";
+                        if (isTitle) { t.text = "Espectros"; t.characterSpacing = 0f; }
+                        else t.alignment = TextAlignmentOptions.Center;
+                        if (t.transform.parent != null && t.transform.parent.name == "Btn_Restart") t.text = "Reiniciar ronda";
                         changed++;
                     }
                 }

@@ -59,8 +59,8 @@ namespace Espectros
         void RefreshLabels()
         {
             string[] names = { "Fácil", "Normal", "Difícil" };
-            if (difficultyLabel != null) difficultyLabel.text = "[ ] Dificultad: " + names[(int)settings.difficulty];
-            if (debugLabel != null) debugLabel.text = (settings.debugMode ? "[X]" : "[ ]") + " Depuración";
+            if (difficultyLabel != null) difficultyLabel.text = "Dificultad: " + names[(int)settings.difficulty];
+            if (debugLabel != null) debugLabel.text = "Depuración: " + (settings.debugMode ? "ON" : "OFF");
         }
 
         void Update()

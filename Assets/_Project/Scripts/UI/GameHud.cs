@@ -38,14 +38,13 @@ namespace Espectros
 
         void OnStateChanged(GameState s)
         {
-            // Estilo «Expediente»: cada ronda es un caso, con un sello rojo debajo
             string msg = s switch
             {
-                GameState.RoundIntro => $"Caso {gm.RoundIndex + 1}" + Stamp("CONFIDENCIAL"),
-                GameState.Enraged => "¡Furia!" + Stamp("PELIGRO"),
-                GameState.RoundWon => "Caso cerrado" + Stamp("RESUELTO"),
-                GameState.GameOver => "Caso abierto" + Stamp("SIN RESOLVER") + $"\n<size=40%>{Score} puntos</size>",
-                GameState.Victory => "Expediente completo" + Stamp("TODOS RESUELTOS") + $"\n<size=40%>{Score} puntos</size>",
+                GameState.RoundIntro => $"Ronda {gm.RoundIndex + 1}",
+                GameState.Enraged => "¡FURIA!",
+                GameState.RoundWon => "¡Ronda superada!",
+                GameState.GameOver => $"GAME OVER\n<size=50%>{Score} puntos</size>",
+                GameState.Victory => $"¡Victoria!\n<size=50%>{Score} puntos</size>",
                 _ => null,
             };
             if (msg == null) return;
@@ -53,8 +52,6 @@ namespace Espectros
         }
 
         int Score => ScoreManager.Instance != null ? ScoreManager.Instance.Score : 0;
-
-        static string Stamp(string text) => $"\n<size=38%><color=#d0473b>{text}</color></size>";
 
         void ShowShort(string msg) => Show(msg, 2f);
 
@@ -72,21 +69,21 @@ namespace Espectros
 
             if (gm.State == GameState.Tutorial)
             {
-                statusText.text = "Instrucciones";
+                statusText.text = "Tutorial";
                 return;
             }
 
             int t = Mathf.CeilToInt(Mathf.Max(0f, gm.TimeLeft));
-            string time = gm.IsEnraged ? "<color=#ff6a5a>FURIA</color>" : $"T-{t / 60:00}:{t % 60:00}";
-            string hearts = health != null ? $"<color=#ff8a7e>Vidas {Mathf.Max(0, health.Hearts)}</color>" : "";
+            string time = gm.IsEnraged ? "<color=#ff4040>FURIA</color>" : $"{t / 60}:{t % 60:00}";
+            string hearts = health != null ? $"<color=#ff5060>Vidas: {Mathf.Max(0, health.Hearts)}</color>" : "";
             int ghosts = spawner != null ? spawner.RemainingCount : 0;
             string battery = flashlight != null ? $"{flashlight.BatteryFraction * 100f:0}%" : "-";
             int balls = BallThrower.Instance != null ? BallThrower.Instance.Balls : 0;
             var sonar = Sonar.Instance;
-            string sonarText = sonar == null ? "-" : sonar.IsReady ? "<color=#9fe7d6>listo</color>" : $"{sonar.CooldownLeft:0}s";
+            string sonarText = sonar == null ? "-" : sonar.IsReady ? "<color=#60e0ff>listo</color>" : $"{sonar.CooldownLeft:0}s";
 
-            statusText.text = $"Caso {gm.RoundIndex + 1}/{gm.RoundCount}   {time}   {hearts}   Pts {Score:0000}\n" +
-                              $"Fantasmas {ghosts}   Linterna {battery}   Pelotas {balls}   Estrellas {StarWallet.Stars}   Sonar {sonarText}";
+            statusText.text = $"Ronda {gm.RoundIndex + 1}/{gm.RoundCount}   {time}   {hearts}   Puntos: {Score}\n" +
+                              $"Fantasmas: {ghosts}   Linterna: {battery}   Pelotas: {balls}   Estrellas: {StarWallet.Stars}   Sonar: {sonarText}";
         }
     }
 }
