@@ -17,6 +17,8 @@ MonoBehaviour:
     count: 5
   - type: {fileID: 11400000, guid: 7ab53874862e22a47b55c2174d0fd5fb, type: 2}
     count: 3
+  - type: {fileID: 11400000, guid: 8764b1d0a1202e54b95d5f53a88fde8c, type: 2}
+    count: 2
   duration: 110
   spawnInterval: 4
   maxAlive: 3

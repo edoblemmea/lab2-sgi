@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10addb4a846544abb5310089c4d04766, type: 3}
+  m_Name: GT_Invisible
+  m_EditorClassIdentifier: Assembly-CSharp::Espectros.GhostType
+  displayName: Invisible
+  color: {r: 0.75, g: 0.4, b: 1, a: 1}
+  speed: 0.55
+  health: 1.5
+  weakness: 3
+  size: 0.45
+  hint: "\xA1Fantasma invisible! Escucha de d\xF3nde viene su lamento, l\xE1nzale
+    pintura (pellizco y soltar) y despu\xE9s ilum\xEDnalo con la linterna"
+  prefab: {fileID: 0}
+  appearSound: {fileID: 0}
+  scareSound: {fileID: 0}
+  hurtSound: {fileID: 0}
+  dieSound: {fileID: 0}

@@ -13,6 +13,8 @@ namespace Espectros
         {
             public GhostType type;
             public int count = 1;
+            [Tooltip("Estos fantasmas solo aparecen cuando ya se ha eliminado a todos los demás de la ronda")]
+            public bool spawnAfterOthers = false;
         }
 
         public List<Entry> ghosts = new List<Entry>();

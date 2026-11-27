@@ -144,6 +144,20 @@ namespace Espectros.EditorTools
                     changed = true;
                 }
                 if (r.stars == 0) { r.stars = 3; changed = true; }
+
+                // Rondas 1-3 más tranquilas (solo si siguen con el valor antiguo de 4 s)
+                float[] calmIntervals = { 8f, 7f, 6f };
+                if (i < calmIntervals.Length && Mathf.Approximately(r.spawnInterval, 4f))
+                {
+                    r.spawnInterval = calmIntervals[i];
+                    changed = true;
+                }
+                // Ronda 4: los invisibles salen cuando ya no queda ningún otro
+                if (i == 3)
+                {
+                    var inv = r.ghosts.Find(e => e.type == a.invisibleGhost);
+                    if (inv != null && !inv.spawnAfterOthers) { inv.spawnAfterOthers = true; changed = true; }
+                }
                 if (changed) EditorUtility.SetDirty(r);
             }
 

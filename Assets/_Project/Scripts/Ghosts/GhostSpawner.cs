@@ -18,12 +18,13 @@ namespace Espectros
 
         readonly List<GhostController> alive = new List<GhostController>();
         readonly List<GhostType> queue = new List<GhostType>();
+        readonly List<GhostType> lateQueue = new List<GhostType>(); // salen cuando ya no queda ninguno de los demás
         Coroutine routine;
 
         public GhostType DefaultType => defaultType;
         public int AliveCount => alive.Count;
-        public int PendingCount => queue.Count;
-        public int RemainingCount => alive.Count + queue.Count;
+        public int PendingCount => queue.Count + lateQueue.Count;
+        public int RemainingCount => alive.Count + queue.Count + lateQueue.Count;
         public event Action<GhostController> GhostDied;
         public event Action<GhostController> GhostSpawned;
 
@@ -41,7 +42,7 @@ namespace Espectros
             Clear();
             foreach (var e in cfg.ghosts)
                 if (e.type != null)
-                    for (int i = 0; i < e.count; i++) queue.Add(e.type);
+                    for (int i = 0; i < e.count; i++) (e.spawnAfterOthers ? lateQueue : queue).Add(e.type);
             // Mezclar el orden de los tipos
             for (int i = queue.Count - 1; i > 0; i--)
             {
@@ -60,6 +61,22 @@ namespace Espectros
                 queue.RemoveAt(0);
                 Spawn(type, cfg.ghostSpeedMultiplier);
                 yield return new WaitForSeconds(cfg.spawnInterval);
+            }
+
+            // Los que salen al final: cuando ya no queda ningún otro fantasma vivo
+            if (lateQueue.Count > 0)
+            {
+                while (alive.Count > 0) yield return null;
+                yield return new WaitForSeconds(2f);
+                Debug.Log($"[Espectros] Aparecen los últimos fantasmas de la ronda ({lateQueue.Count})");
+                while (lateQueue.Count > 0)
+                {
+                    while (alive.Count >= Mathf.Max(1, cfg.maxAlive)) yield return null;
+                    var type = lateQueue[0];
+                    lateQueue.RemoveAt(0);
+                    Spawn(type, cfg.ghostSpeedMultiplier);
+                    yield return new WaitForSeconds(cfg.spawnInterval);
+                }
             }
             routine = null;
         }
@@ -126,6 +143,7 @@ namespace Espectros
             if (routine != null) StopCoroutine(routine);
             routine = null;
             queue.Clear();
+            lateQueue.Clear();
             foreach (var g in alive) if (g != null) Destroy(g.gameObject);
             alive.Clear();
         }
