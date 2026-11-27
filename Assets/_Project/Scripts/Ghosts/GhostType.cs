@@ -17,6 +17,8 @@ namespace Espectros
         public GhostWeakness weakness = GhostWeakness.Flashlight;
         [Tooltip("Altura del fantasma (m)")]
         public float size = 0.45f;
+        [Tooltip("Aviso que se muestra la primera vez que aparece este tipo")]
+        [TextArea] public string hint = "";
         [Tooltip("Prefab del fantasma (si está vacío se usa el del spawner)")]
         public GhostController prefab;
 

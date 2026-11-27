@@ -32,6 +32,8 @@ namespace Espectros
         bool open, forcedOpen;
         Button[] buttons;
 
+        public event System.Action Opened;
+
         void Start()
         {
             settings = GameSettings.Instance;
@@ -147,6 +149,7 @@ namespace Espectros
 
         void SetOpen(bool value)
         {
+            if (value && !open) Opened?.Invoke();
             open = value;
             if (!value) forcedOpen = false;
             if (panel != null) panel.SetActive(value);
